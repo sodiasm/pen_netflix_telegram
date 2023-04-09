@@ -1,4 +1,5 @@
 import os
+import datetime
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 
@@ -82,6 +83,14 @@ def echo(update, context):
     # reply_message = update.message.text.upper()
     res = query_db("SELECT film_name FROM films where film_name = ? ", update.message.text )
     if res == None:
+        currentTime = datetime.datetime.now()
+        if currentTime.hour < 12:
+            reply_message = 'Good morning, ' + str(update.effective_chat.username) + '.'
+        elif 12 <= currentTime.hour < 18:
+            reply_message = 'Good afternoon, ' + str(update.effective_chat.username)  + '.'
+        else:
+            reply_message = 'Good evening, ' + str(update.effective_chat.username)  + '.'
+        context.bot.send_message(chat_id=update.effective_chat.id, text= reply_message)
         reply_message = 'What film do you like?'
         context.bot.send_message(chat_id=update.effective_chat.id, text= reply_message)
         # Define a few command handlers. These usually take the two arguments update and
@@ -100,14 +109,16 @@ def help_command(update: Update, context: CallbackContext) -> None:
 def add(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /add is issued."""
     try:
-        # global redis1
-        logging.info(context.args[0])
-        msg = context.args[0] # /add keyword <-- this should store the keyword
-        # redis1.incr(msg)
-        update.message.reply_text('You have said "' + msg + '".' )
-        # redis1.get(msg).decode('UTF-8') + ' times.')
+        msg = ' '.join(context.args)
+        res = query_db("SELECT * FROM films where userid = ? and film_name = ? ", (str(update.effective_chat.id),msg) )
+        if res == None:
+            query_update_delete_db("INSERT INTO films (film_name, userId, review) VALUES (?, ?, ?)", (msg ,str(update.effective_chat.id) , ""))
+            update.message.reply_text(msg + ' has been inserted in sysyem.' )
+        else:
+            update.message.reply_text(msg + ' has already been in the system.')
+        #update.message.reply_text('You have said "' + msg + '".' )
     except (IndexError, ValueError):
-        update.message.reply_text('Usage: /add <keyword>')
+        update.message.reply_text('Usage: /add <Movie name>')
 
 def hello_command(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /add is issued."""
