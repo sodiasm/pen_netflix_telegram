@@ -1,5 +1,7 @@
 from telegram import Message, Update
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+from encrypt import encrypt
+from encrypt import decrypt
 import configparser
 import logging
 import pyodbc
@@ -14,9 +16,9 @@ bot_msg = [
     'Please write your review of %s.',
     'Thanks for your review of %s.',
     'Let\'s see a review from other people.',
-    'Opss... Nobody leave any reviews.'
+    'Opss... Nobody leaves any reviews.'
 ]
-bot_expt_msg = 'I don\'t know what 7 u say'
+bot_expt_msg = 'I don\'t know what are you saying.'
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -74,11 +76,11 @@ def echo(update, context):
             context.bot.send_message(chat_id=update.effective_chat.id, text=bot_expt_msg)
             return
     elif question_id == 2:
-        res = query_db("SELECT * FROM films where userid = ? and film_name = ? ", (str(update.effective_chat.id),film_name,) )
+        res = query_db("SELECT * FROM films where userid = ? and film_name = ? ", (encrypt(str(update.effective_chat.id),encrypt_pw),film_name,) )
         if res == None:
-            query_update_delete_db("INSERT INTO films (film_name, userId, review) VALUES (?, ?, ?)", (film_name ,str(update.effective_chat.id) , update.message.text, ))
+            query_update_delete_db("INSERT INTO films (film_name, userId, review) VALUES (?, ?, ?)", (film_name ,encrypt(str(update.effective_chat.id),encrypt_pw) , update.message.text, ))
         else:
-            query_update_delete_db("Update films Set review = ? where userid = ? and film_name = ?", (update.message.text , str(update.effective_chat.id) , film_name, ))
+            query_update_delete_db("Update films Set review = ? where userid = ? and film_name = ?", (update.message.text , encrypt(str(update.effective_chat.id),encrypt_pw) , film_name, ))
         reply_message = bot_msg[3] % (film_name)
         film_name = ""
         question_id = -1
