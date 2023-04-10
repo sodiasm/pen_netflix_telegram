@@ -1,3 +1,4 @@
+import os
 from telegram import Message, Update
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 import configparser
@@ -18,19 +19,16 @@ bot_msg = [
 ]
 bot_expt_msg = 'I don\'t know what are you saying.'
 
-config = configparser.ConfigParser()
-config.read('config.ini')
-
-server = (config['AZURE_SQL_SERVER']['server'])
-database = (config['AZURE_SQL_SERVER']['database'])
-username = (config['AZURE_SQL_SERVER']['username'])
-password = (config['AZURE_SQL_SERVER']['password'])
-driver = (config['AZURE_SQL_SERVER']['driver'])
-conn_str = 'DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password
+server = os.environ['server']
+database = os.environ['database']
+username = os.environ['username']
+password = os.environ['password']
+driver=os.environ['driver']
+conn_str = 'DRIVER='+driver+';ENCRYPT=yes;SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password
 
 def main():  
     # Load your token and create an Updater for your Bot
-    updater = Updater(token=(config['TELEGRAM']['ACCESS_TOKEN']), use_context=True)
+    updater = Updater(token=(os.environ['ACCESS_TOKEN']), use_context=True)
     # updater = Updater(token=(os.environ['ACCESS_TOKEN']), use_context=True)
     dispatcher = updater.dispatcher
     
